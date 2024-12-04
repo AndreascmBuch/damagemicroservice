@@ -21,14 +21,6 @@ Dette projekt er en Flask-baseret API til administration af en SQLite-database, 
 
 ---
 
-## **Struktur**
-projektnavn/ │ ├── app.py # Flask-applikationen med API-logik ├── Dockerfile # Docker-konfiguration ├── skadedatabase.py # Script til at oprette og initialisere databasen ├── damage_database.db # SQLite-databasefil (persistent via Docker volume) └── README.md # Dokumentation (denne fil)
-
-yaml
-Kopier kode
-
----
-
 ## **Installation og brug**
 
 ### **1. Klargøring af projektet**
@@ -39,15 +31,9 @@ Kopier kode
    cd <projektnavn>
 2. Byg Docker-image
 Byg Docker-containeren med følgende kommando:
-
-bash
-Kopier kode
 docker build -t flask-app .
 3. Start containeren
 Kør applikationen med følgende kommando. Denne opsætning inkluderer et volume til at gøre databasen persistent:
-
-bash
-Kopier kode
 docker run -p 5000:5000 -v $(pwd)/damage_database.db:/app/damage_database.db flask-app
 4. Brug API'et
 API'et er tilgængeligt på http://localhost:5000/damage. Brug et værktøj som Postman eller curl til at hente data:
@@ -59,19 +45,18 @@ Endpoints
 Metode	Endpoint	Beskrivelse
 GET	/damage	Henter alle bilskader
 Databasen
-Tabelstruktur: damage
-Kolonnenavn	Datatype	Beskrivelse
-damage_id	INTEGER	Primær nøgle, autogenereret
-car_id	INTEGER	Bilens ID
-description	TEXT	Beskrivelse af skaden
-date_reported	DATETIME	Dato hvor skaden blev registreret
-severity	TEXT (CHECK)	Skadens alvorlighed: low, medium, high
-cost_estimate	REAL	Anslåede reparationsomkostninger
-Test
-Før første kørsel, skal du initialisere databasen med scriptet skadedatabase.py:
+| Kolonnenavn     | Datatype      | Beskrivelse                                    |
+|:-----------------|:-------------:|-----------------------------------------------:|
+| `damage_id`      | INTEGER       | Primær nøgle, autogenereret                   |
+| `car_id`         | INTEGER       | Bilens ID                                     |
+| `description`    | TEXT          | Beskrivelse af skaden                         |
+| `date_reported`  | DATETIME      | Dato hvor skaden blev registreret             |
+| `severity`       | TEXT (CHECK)  | Skadens alvorlighed: `low`, `medium`, `high`  |
+| `cost_estimate`  | REAL          | Anslåede reparationsomkostninger              |
 
-bash
-Kopier kode
+
+
+Før første kørsel, skal du initialisere databasen med scriptet skadedatabase.py:
 python skadedatabase.py
 Dette opretter tabellen og indsætter en testpost.
 
