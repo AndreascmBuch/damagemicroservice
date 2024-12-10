@@ -8,6 +8,49 @@ def get_db_connection():
 
 app = Flask(__name__)
 
+@app.route('/damage', methods=['POST'])
+def register_damage():
+    data = request.json
+    car_id = data.get("car_id")
+    date_reported = data.get("date_reported")  # Kan være None
+    
+    # Skadetyper
+    engine_damage = data.get("engine_damage", "none")
+    tire_damage = data.get("tire_damage", "none")
+    brake_damage = data.get("brake_damage", "none")
+    bodywork_damage = data.get("bodywork_damage", "none")
+    interior_damage = data.get("interior_damage", "none")
+    electronic_damage = data.get("electronic_damage", "none")
+    glass_damage = data.get("glass_damage", "none")
+    undercarriage_damage = data.get("undercarriage_damage", "none")
+    light_damage = data.get("light_damage", "none")
+
+    # Tjek for nødvendige felter
+    if not car_id:
+        return jsonify({"error": "car_id is required"}), 400
+
+    # Forbind til databasen og indsæt skaden
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute('''
+            INSERT INTO damage (car_id, date_reported, engine_damage, tire_damage, brake_damage, 
+                                bodywork_damage, interior_damage, electronic_damage, glass_damage, 
+                                undercarriage_damage, light_damage)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (car_id, date_reported, engine_damage, tire_damage, brake_damage, 
+              bodywork_damage, interior_damage, electronic_damage, glass_damage, 
+              undercarriage_damage, light_damage))
+        conn.commit()
+    except sqlite3.Error as e:
+        return jsonify({"error": f"Database error: {e}"}), 500
+    finally:
+        conn.close()
+
+    return jsonify({"message": "Damage registered successfully"}), 201
+
+
 @app.route('/damage', methods=['GET'])
 def list_of_car_damage():
     conn = get_db_connection()
