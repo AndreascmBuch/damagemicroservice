@@ -64,6 +64,30 @@ def list_of_car_damage():
 
     return jsonify(damage_list)
 
+@app.route('/damage/<int:car_id>', methods=['GET'])
+def list_of_car_damage(car_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Udfør SQL-forespørgsel
+        cursor.execute('SELECT * FROM damage WHERE car_id = ?', (car_id,))
+        damage_records = cursor.fetchall()
+        conn.close()
+
+        # Konverter til en liste af dicts
+        damage_list = [dict(row) for row in damage_records]
+
+        # Returnér data
+        if damage_list:
+            return jsonify(damage_list), 200
+        else:
+            return jsonify({"error": "Ingen skadesdata fundet for denne bil"}), 404
+
+    except Exception as e:
+        return jsonify({"error": f"Serverfejl: {str(e)}"}), 500
+
+
 @app.route('/damage/<int:damage_id>', methods=['PUT'])
 def update_damage_report(damage_id):
     # Forbind til databasen
@@ -105,7 +129,16 @@ def update_damage_report(damage_id):
 
     return jsonify({"message": f"Damage report {damage_id} updated successfully"}), 200
 
- 
+
+# test route så vi ikke får 404
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({
+        "service": "Damage Service",
+        "version": "1.0.0",
+        "description": "A RESTful API for managing damaged cars"
+    })
+
 
 if __name__ == '__main__':
     app.run()
