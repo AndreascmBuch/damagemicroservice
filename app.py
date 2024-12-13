@@ -76,11 +76,11 @@ def list_of_car_damage(car_id):
         conn.close()
 
         # Konverter til en liste af dicts
-        damage_list = [dict(row) for row in records]
+        damage_list1 = [dict(row) for row in records]
 
         # Returnér data
-        if damage_list:
-            return jsonify(damage_list), 200
+        if damage_list1:
+            return jsonify(damage_list1), 200
         else:
             return jsonify({"error": "Ingen skadesdata fundet for denne bil"}), 404
 
