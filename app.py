@@ -65,7 +65,7 @@ def list_of_car_damage():
     return jsonify(damage_list)
 
 @app.route('/damage/<int:car_id>', methods=['GET'])
-def get_car_damage(car_id):
+def get_damage_by_car_id(car_id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -76,16 +76,16 @@ def get_car_damage(car_id):
         conn.close()
 
         # Konverter til en liste af dicts
-        damage_list1 = [dict(row) for row in records]
+        damage_list = [dict(row) for row in records]
 
         # Returnér data
-        if damage_list1:
-            return jsonify(damage_list1), 200
+        if damage_list:
+            return jsonify(damage_list), 200
         else:
-            return jsonify({"error": "Ingen skadesdata fundet for denne bil"}), 404
+            return jsonify({"error": "No damage data found for this car"}), 404
 
     except Exception as e:
-        return jsonify({"error": f"Serverfejl: {str(e)}"}), 500
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 
 @app.route('/damage/change/<int:damage_id>', methods=['PUT'])
