@@ -129,6 +129,25 @@ def update_damage_report(damage_id):
 
     return jsonify({"message": f"Damage report {damage_id} updated successfully"}), 200
 
+@app.route('/damage/change/<int:damage_id>', methods=['DELETE'])
+def delete_damage(damage_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # SQL query to delete the damage record with the given damage_id
+        cursor.execute('DELETE FROM damage WHERE damage_id = ?', (damage_id,))
+        conn.commit()
+        
+        if cursor.rowcount == 0:
+            return jsonify({"message": f"No damage report found with id {damage_id}"}), 404
+        return jsonify({"message": f"Damage report {damage_id} deleted successfully"}), 200
+
+    except sqlite3.Error as e:
+        return jsonify({"message": f"Database error: {str(e)}"}), 500
+    finally:
+        conn.close()
+
 
 @app.route('/', methods=['GET'])
 def home():
