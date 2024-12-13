@@ -65,7 +65,7 @@ def list_of_car_damage():
     return jsonify(damage_list)
 
 @app.route('/damage/<int:car_id>', methods=['GET'])
-def list_of_car_damage(car_id):
+def get_car_damage(car_id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
