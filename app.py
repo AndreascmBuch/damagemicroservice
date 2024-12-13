@@ -130,6 +130,16 @@ def update_damage_report(damage_id):
     return jsonify({"message": f"Damage report {damage_id} updated successfully"}), 200
 
 
+# test route så vi ikke får 404
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({
+        "service": "Payment Service",
+        "version": "1.0.0",
+        "description": "A RESTful API for managing payments"
+    })
+
+
 
 if __name__ == '__main__':
     app.run()
