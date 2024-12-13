@@ -3,7 +3,7 @@ import sqlite3
 from flask import Flask, jsonify, request, g
 from dotenv import load_dotenv
 
-
+# Tjek om DB_path virker 
 
 def get_db_connection():
     """Function to get the database connection."""
