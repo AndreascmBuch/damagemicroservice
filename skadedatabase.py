@@ -30,19 +30,6 @@ conn.close()
 conn = sqlite3.connect("damage_database.db")
 cursor = conn.cursor()
 
-cursor.execute('''
-INSERT INTO damage (car_id, date_reported, engine_damage, tire_damage, brake_damage, bodywork_damage, 
-                    interior_damage, electronic_damage, glass_damage, undercarriage_damage, light_damage)
-VALUES (123, '2024-12-03', 'minor', 'puncture', 'squealing', 'dent', 
-        'none', 'minor', 'cracked', 'scraped', 'broken')
-''')
-
-cursor.execute('''
-INSERT INTO damage (car_id, date_reported, engine_damage, tire_damage, brake_damage, bodywork_damage, 
-                    interior_damage, electronic_damage, glass_damage, undercarriage_damage, light_damage)
-VALUES (456, '2024-12-04', 'major', 'none', 'broken', 'scratched', 
-        'stained', 'major', 'shattered', 'dented', 'not working')
-''')
 
 # Gem ændringer og luk forbindelsen
 conn.commit()
