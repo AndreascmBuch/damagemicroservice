@@ -1,10 +1,14 @@
+import os 
 import sqlite3
 from flask import Flask, jsonify, request
+from dotenv import load_dotenv
 
 def get_db_connection():
     conn = sqlite3.connect('damage_database.db')
     conn.row_factory = sqlite3.Row  
     return conn
+
+DB_PATH = os.getenv('DB_PATH', 'damage_database.db')
 
 app = Flask(__name__)
 
