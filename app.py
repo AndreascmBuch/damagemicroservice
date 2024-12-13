@@ -72,11 +72,11 @@ def list_of_car_damage(car_id):
         
         # Udfør SQL-forespørgsel
         cursor.execute('SELECT * FROM damage WHERE car_id = ?', (car_id,))
-        damage_records = cursor.fetchall()
+        records = cursor.fetchall()
         conn.close()
 
         # Konverter til en liste af dicts
-        damage_list = [dict(row) for row in damage_records]
+        damage_list = [dict(row) for row in records]
 
         # Returnér data
         if damage_list:
