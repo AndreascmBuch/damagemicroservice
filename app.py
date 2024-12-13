@@ -3,11 +3,7 @@ import sqlite3
 from flask import Flask, jsonify, request, g
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
 
-# Get DB_PATH from environment variable or use default
-DB_PATH = os.getenv('DB_PATH', 'damage_database.db')
 
 def get_db_connection():
     """Function to get the database connection."""
@@ -17,6 +13,12 @@ def get_db_connection():
 
 # Initialize the Flask app
 app = Flask(__name__)
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Get DB_PATH from environment variable or use default
+DB_PATH = os.getenv('DB_PATH', 'damage_database.db')
 
 # Close the database connection after the request is finished
 @app.teardown_appcontext
