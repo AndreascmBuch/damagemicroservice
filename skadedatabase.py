@@ -1,4 +1,9 @@
+import os
 import sqlite3
+from dotenv import load_dotenv
+
+
+DB_PATH = os.getenv('DB_PATH', 'greetings.db')
 
 # Opret forbindelse til databasen
 conn = sqlite3.connect("damage_database.db")
@@ -26,12 +31,4 @@ CREATE TABLE IF NOT EXISTS damage(
 conn.commit()
 conn.close()
 
-# Indsæt testdata for at demonstrere skadesregistreringen
-conn = sqlite3.connect("damage_database.db")
-cursor = conn.cursor()
-
-
-# Gem ændringer og luk forbindelsen
-conn.commit()
-conn.close()
 
