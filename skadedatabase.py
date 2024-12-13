@@ -1,9 +1,9 @@
 import os
 import sqlite3
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
 
-DB_PATH = os.getenv('DB_PATH', 'damage_database.db')
+#DB_PATH = os.getenv('DB_PATH', 'damage_database.db')
 
 # Opret forbindelse til databasen
 conn = sqlite3.connect("damage_database.db")
