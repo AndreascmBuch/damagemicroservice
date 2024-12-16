@@ -56,7 +56,7 @@ def home():
     })
 
 # Route to register a new damage report
-@app.route('/damage', methods=['POST'])
+@app.route('/damage/add', methods=['POST'])
 def register_damage():
     data = request.json
     car_id = data.get("car_id")
