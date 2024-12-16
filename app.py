@@ -2,6 +2,7 @@ import os
 import sqlite3
 from flask import Flask, jsonify, request, g
 from dotenv import load_dotenv
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity 
 
 # Load environment variables from .env file
 load_dotenv()
@@ -11,6 +12,22 @@ DB_PATH = os.getenv('DB_PATH', 'damage_database.db')
 
 # Initialize the Flask app
 app = Flask(__name__)
+
+# Configure JWT settings
+app.config['JWT_SECRET_KEY'] = os.getenv('KEY', 'your_secret_key')  # Load from .env
+app.config['JWT_TOKEN_LOCATION'] = ['headers']  # Ensure tokens are in headers
+app.config['JWT_HEADER_NAME'] = 'Authorization'  # Default header name for JWT
+app.config['JWT_HEADER_TYPE'] = 'Bearer'  # Prefix for the token (e.g., Bearer <token>)
+
+# Initialize the JWT manager
+jwt = JWTManager(app)
+
+@app.route('/debug', methods=['GET'])
+def debug():
+    return jsonify({
+        "JWT_SECRET_KEY": os.getenv('KEY', 'Not Set'),
+        "Database_Path": DB_PATH
+    }), 200
 
 # Function to get the database connection
 def get_db_connection():
@@ -57,6 +74,7 @@ def home():
 
 # Route to register a new damage report
 @app.route('/damage/add', methods=['POST'])
+@jwt_required()
 def register_damage():
     data = request.json
     car_id = data.get("car_id")
@@ -90,6 +108,7 @@ def register_damage():
 
 # Route to fetch all damage records
 @app.route('/damage', methods=['GET'])
+@jwt_required()
 def list_of_car_damage():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -102,6 +121,7 @@ def list_of_car_damage():
 
 # Route to get damage records for a specific car
 @app.route('/damage/<int:car_id>', methods=['GET'])
+@jwt_required()
 def get_damage_by_car_id(car_id):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -117,6 +137,7 @@ def get_damage_by_car_id(car_id):
 
 # Route to update a damage report
 @app.route('/damage/change/<int:damage_id>', methods=['PUT'])
+@jwt_required()
 def update_damage_report(damage_id):
     updated_data = request.get_json()
 
@@ -149,6 +170,7 @@ def update_damage_report(damage_id):
 
 # Route to delete a damage report
 @app.route('/damage/change/<int:damage_id>', methods=['DELETE'])
+@jwt_required()
 def delete_damage(damage_id):
     try:
         conn = get_db_connection()
