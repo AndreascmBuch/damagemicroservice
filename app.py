@@ -3,152 +3,140 @@ import sqlite3
 from flask import Flask, jsonify, request, g
 from dotenv import load_dotenv
 
-# Tjek om DB_path virker 
-# 
-def get_db_connection():
-    """Function to get the database connection."""
-    conn = sqlite3.connect(DB_PATH)  # Use the correct DB_PATH
-    conn.row_factory = sqlite3.Row  
-    return conn
-
-# Initialize the Flask app
-app = Flask(__name__)
-
 # Load environment variables from .env file
 load_dotenv()
 
 # Get DB_PATH from environment variable or use default
 DB_PATH = os.getenv('DB_PATH', 'damage_database.db')
 
+# Initialize the Flask app
+app = Flask(__name__)
+
+# Function to get the database connection
+def get_db_connection():
+    if 'db' not in g:
+        g.db = sqlite3.connect(DB_PATH)
+        g.db.row_factory = sqlite3.Row
+    return g.db
+
 # Close the database connection after the request is finished
 @app.teardown_appcontext
 def close_db(error):
-    """Closes the database connection after each request."""
-    if hasattr(g, 'db'):
+    if 'db' in g:
         g.db.close()
 
-# Startside - Sikre så man ikke starter på 404 
+# Ensure the database and table exist
+with sqlite3.connect(DB_PATH) as conn:
+    cursor = conn.cursor()
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS damage(
+        damage_id INTEGER PRIMARY KEY AUTOINCREMENT, 
+        car_id INTEGER NOT NULL, 
+        date_reported DATETIME DEFAULT CURRENT_TIMESTAMP, 
+        engine_damage TEXT CHECK(engine_damage IN ('none', 'minor', 'major')) DEFAULT 'none', 
+        tire_damage TEXT CHECK(tire_damage IN ('none', 'puncture', 'worn out', 'bald')) DEFAULT 'none', 
+        brake_damage TEXT CHECK(brake_damage IN ('none', 'squealing', 'broken')) DEFAULT 'none', 
+        bodywork_damage TEXT CHECK(bodywork_damage IN ('none', 'dent', 'scratched')) DEFAULT 'none', 
+        interior_damage TEXT CHECK(interior_damage IN ('none', 'scratched', 'torn', 'stained')) DEFAULT 'none', 
+        electronic_damage TEXT CHECK(electronic_damage IN ('none', 'minor', 'major')) DEFAULT 'none', 
+        glass_damage TEXT CHECK(glass_damage IN ('none', 'cracked', 'shattered')) DEFAULT 'none', 
+        undercarriage_damage TEXT CHECK(undercarriage_damage IN ('none', 'scraped', 'dented')) DEFAULT 'none', 
+        light_damage TEXT CHECK(light_damage IN ('none', 'broken', 'not working')) DEFAULT 'none'
+    )
+    ''')
+    conn.commit()
+
+# Home route
 @app.route('/', methods=['GET'])
 def home():
-    """Basic home route to check if the service is running."""
     return jsonify({
         "service": "Damage Service",
         "version": "1.0.0",
         "description": "A RESTful API for managing car damages"
     })
 
-# Indsættelse af skaderapport 
+# Route to register a new damage report
 @app.route('/damage', methods=['POST'])
 def register_damage():
-    """Route to register a new damage report."""
     data = request.json
     car_id = data.get("car_id")
-    date_reported = data.get("date_reported")  # Can be None
-    
-    # Damage types (defaults to "none" if not provided)
-    engine_damage = data.get("engine_damage", "none")
-    tire_damage = data.get("tire_damage", "none")
-    brake_damage = data.get("brake_damage", "none")
-    bodywork_damage = data.get("bodywork_damage", "none")
-    interior_damage = data.get("interior_damage", "none")
-    electronic_damage = data.get("electronic_damage", "none")
-    glass_damage = data.get("glass_damage", "none")
-    undercarriage_damage = data.get("undercarriage_damage", "none")
-    light_damage = data.get("light_damage", "none")
+    date_reported = data.get("date_reported")  # Optional
 
-    # Check for required fields
+    # Damage types (defaults to "none" if not provided)
+    damage_fields = [
+        "engine_damage", "tire_damage", "brake_damage", "bodywork_damage",
+        "interior_damage", "electronic_damage", "glass_damage",
+        "undercarriage_damage", "light_damage"
+    ]
+    damage_values = {field: data.get(field, "none") for field in damage_fields}
+
     if not car_id:
         return jsonify({"error": "car_id is required"}), 400
 
-    # Connect to the database and insert the damage record
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
     try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
         cursor.execute('''
             INSERT INTO damage (car_id, date_reported, engine_damage, tire_damage, brake_damage, 
                                 bodywork_damage, interior_damage, electronic_damage, glass_damage, 
                                 undercarriage_damage, light_damage)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (car_id, date_reported, engine_damage, tire_damage, brake_damage, 
-              bodywork_damage, interior_damage, electronic_damage, glass_damage, 
-              undercarriage_damage, light_damage))
+        ''', (car_id, date_reported, *damage_values.values()))
         conn.commit()
     except sqlite3.Error as e:
         return jsonify({"error": f"Database error: {e}"}), 500
-    finally:
-        conn.close()
 
     return jsonify({"message": "Damage registered successfully"}), 201
 
-# Giver alle skadesrapporter i mikroservicen 
+# Route to fetch all damage records
 @app.route('/damage', methods=['GET'])
 def list_of_car_damage():
-    """Route to fetch all damage records."""
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM damage')
     damage_records = cursor.fetchall()
-    conn.close()
 
     damage_list = [dict(row) for row in damage_records]
 
     return jsonify(damage_list)
 
-# Giver en specifik skadesrapport 
+# Route to get damage records for a specific car
 @app.route('/damage/<int:car_id>', methods=['GET'])
 def get_damage_by_car_id(car_id):
-    """Route to get damage records for a specific car."""
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Execute SQL query
-        cursor.execute('SELECT * FROM damage WHERE car_id = ?', (car_id,))
-        records = cursor.fetchall()
-        conn.close()
-
-        # Convert to a list of dicts
-        damage_list = [dict(row) for row in records]
-
-        # Return data
-        if damage_list:
-            return jsonify(damage_list), 200
-        else:
-            return jsonify({"error": "No damage data found for this car"}), 404
-
-    except Exception as e:
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
-
-#Ændring af skaderapport 
-@app.route('/damage/change/<int:damage_id>', methods=['PUT'])
-def update_damage_report(damage_id):
-    """Route to update a damage report."""
     conn = get_db_connection()
     cursor = conn.cursor()
+    cursor.execute('SELECT * FROM damage WHERE car_id = ?', (car_id,))
+    records = cursor.fetchall()
 
-    # Get the data from the request body
+    damage_list = [dict(row) for row in records]
+
+    if damage_list:
+        return jsonify(damage_list), 200
+    else:
+        return jsonify({"error": "No damage data found for this car"}), 404
+
+# Route to update a damage report
+@app.route('/damage/change/<int:damage_id>', methods=['PUT'])
+def update_damage_report(damage_id):
     updated_data = request.get_json()
 
-    # List of valid fields that can be updated
     updatable_fields = [
         "date_reported", "engine_damage", "tire_damage", "brake_damage",
         "bodywork_damage", "interior_damage", "electronic_damage", 
         "glass_damage", "undercarriage_damage", "light_damage"
     ]
 
-    # Dynamically create the SQL query based on provided fields
     set_clause = ", ".join([f"{field} = ?" for field in updated_data.keys() if field in updatable_fields])
     values = [updated_data[field] for field in updated_data.keys() if field in updatable_fields]
 
-    # Ensure there are valid fields to update
     if not set_clause:
         return jsonify({"message": "No valid fields to update"}), 400
 
-    # Add the damage_id for the WHERE condition
     values.append(damage_id)
 
     try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
         cursor.execute(f"UPDATE damage SET {set_clause} WHERE damage_id = ?", values)
         conn.commit()
 
@@ -156,31 +144,24 @@ def update_damage_report(damage_id):
             return jsonify({"message": f"No report found with id {damage_id}"}), 404
     except sqlite3.Error as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500
-    finally:
-        conn.close()
 
     return jsonify({"message": f"Damage report {damage_id} updated successfully"}), 200
 
-#Sletning af skaderapport 
+# Route to delete a damage report
 @app.route('/damage/change/<int:damage_id>', methods=['DELETE'])
 def delete_damage(damage_id):
-    """Route to delete a damage report."""
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-
-        # Execute SQL query to delete the damage record
         cursor.execute('DELETE FROM damage WHERE damage_id = ?', (damage_id,))
         conn.commit()
-        
+
         if cursor.rowcount == 0:
             return jsonify({"message": f"No damage report found with id {damage_id}"}), 404
         return jsonify({"message": f"Damage report {damage_id} deleted successfully"}), 200
 
     except sqlite3.Error as e:
         return jsonify({"message": f"Database error: {str(e)}"}), 500
-    finally:
-        conn.close()
 
 if __name__ == '__main__':
     app.run(debug=True)
