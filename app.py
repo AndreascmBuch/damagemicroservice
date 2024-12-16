@@ -4,7 +4,7 @@ from flask import Flask, jsonify, request, g
 from dotenv import load_dotenv
 
 # Tjek om DB_path virker 
-
+# 
 def get_db_connection():
     """Function to get the database connection."""
     conn = sqlite3.connect(DB_PATH)  # Use the correct DB_PATH
@@ -27,6 +27,7 @@ def close_db(error):
     if hasattr(g, 'db'):
         g.db.close()
 
+# Startside - Sikre så man ikke starter på 404 
 @app.route('/', methods=['GET'])
 def home():
     """Basic home route to check if the service is running."""
@@ -36,6 +37,7 @@ def home():
         "description": "A RESTful API for managing car damages"
     })
 
+# Indsættelse af skaderapport 
 @app.route('/damage', methods=['POST'])
 def register_damage():
     """Route to register a new damage report."""
@@ -79,6 +81,7 @@ def register_damage():
 
     return jsonify({"message": "Damage registered successfully"}), 201
 
+# Giver alle skadesrapporter i mikroservicen 
 @app.route('/damage', methods=['GET'])
 def list_of_car_damage():
     """Route to fetch all damage records."""
@@ -92,6 +95,7 @@ def list_of_car_damage():
 
     return jsonify(damage_list)
 
+# Giver en specifik skadesrapport 
 @app.route('/damage/<int:car_id>', methods=['GET'])
 def get_damage_by_car_id(car_id):
     """Route to get damage records for a specific car."""
@@ -116,6 +120,7 @@ def get_damage_by_car_id(car_id):
     except Exception as e:
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
+#Ændring af skaderapport 
 @app.route('/damage/change/<int:damage_id>', methods=['PUT'])
 def update_damage_report(damage_id):
     """Route to update a damage report."""
@@ -156,6 +161,7 @@ def update_damage_report(damage_id):
 
     return jsonify({"message": f"Damage report {damage_id} updated successfully"}), 200
 
+#Sletning af skaderapport 
 @app.route('/damage/change/<int:damage_id>', methods=['DELETE'])
 def delete_damage(damage_id):
     """Route to delete a damage report."""
