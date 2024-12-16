@@ -15,7 +15,7 @@ app = Flask(__name__)
 # Function to get the database connection
 def get_db_connection():
     if 'db' not in g:
-        g.db = sqlite3.connect(DB_PATH)
+        g.db = sqlite3.connect(DB_PATH) 
         g.db.row_factory = sqlite3.Row
     return g.db
 
