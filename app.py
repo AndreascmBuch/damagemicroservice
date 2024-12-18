@@ -168,7 +168,7 @@ def update_damage_report(damage_id):
     return jsonify({"message": f"Damage report {damage_id} updated successfully"}), 200
 
 # Route to delete a damage report
-@app.route('/damage/change/<int:damage_id>', methods=['DELETE'])
+@app.route('/damage/delete/<int:damage_id>', methods=['DELETE'])
 @jwt_required()
 def delete_damage(damage_id):
     try:
